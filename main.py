@@ -1,7 +1,9 @@
 import sys
 
+import tensorflow as tf
+
 def evalPostfix(postfixExpr):
-    s = list()
+    s = []
     for symbol in postfixExpr:
         try:
             s.append(float(symbol))
@@ -9,16 +11,24 @@ def evalPostfix(postfixExpr):
             if len(s) > 0:
                 result = None
                 if symbol == '+':
-                    result = s.pop() + s.pop()
-                elif symbol == '-':
-                    last = s.pop()
                     first = s.pop()
+                    last = s.pop()
+                    tensor = tf.add(tf.constant(first), tf.constant(last))
+                    result = first + last
+                elif symbol == '-':
+                    first = s.pop()
+                    last = s.pop()
+                    tensor = tf.subtract(tf.constant(first), tf.constant(last))
                     result = first - last
                 elif symbol == '*':
-                    result = s.pop() * s.pop()
-                elif symbol == '/':
-                    last = s.pop()
                     first = s.pop()
+                    last = s.pop()
+                    tensor = tf.mul(tf.constant(first), tf.constant(last))
+                    result = first * last
+                elif symbol == '/':
+                    first = s.pop()
+                    last = s.pop()
+                    tensor = tf.div(tf.constant(first), tf.constant(last))
                     result = first / last
                 if result:
                     s.append(result)
