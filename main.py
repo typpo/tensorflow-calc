@@ -63,9 +63,11 @@ def main():
     return 0
 
 def test():
+    print 'Testing...'
     assert 2.0 == evalPostfix(infixToPostfix('4 * 2 - 3 * 2'))
     assert 1.375 == evalPostfix(infixToPostfix('3 / 4 / 2 + 1'))
     assert 1.375 == evalPostfix(infixToPostfix('1.0 + 0.375'))
+    print 'All tests passed.'
 
 if __name__ == '__main__':
     sys.exit(main())
