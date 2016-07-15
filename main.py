@@ -39,7 +39,7 @@ def infixToPostfix(infixExpr):
 
     tokenlst = infixExpr.split(' ')
     for token in tokenlst:
-        if token in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' or token in '0123456789':
+        if token[0] in '0123456789':
             outlst.append(token)
         elif token == '(':
             s.append(token)
