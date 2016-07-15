@@ -1,8 +1,8 @@
 import sys
 
-def evalpostfix(postfixexpr):
+def evalPostfix(postfixExpr):
     s = list()
-    for symbol in postfixexpr:
+    for symbol in postfixExpr:
         try:
             s.append(float(symbol))
         except:
@@ -26,18 +26,18 @@ def evalpostfix(postfixexpr):
                     raise ValueError('Unknown symbol %s' % symbol)
     return s.pop()
 
-def infixtopostfix(infixexpr):
+def infixToPostfix(infixExpr):
     s = []
     outlst = []
-    prec = {}
-    prec['/'] = 3
-    prec['*'] = 3
-    prec['+'] = 2
-    prec['-'] = 2
-    prec['('] = 1
-    oplst = ['/','*','+','-']
+    prec = {
+        '/': 3,
+        '*': 3,
+        '+': 2,
+        '-': 2,
+        '(': 1,
+    }
 
-    tokenlst = infixexpr.split(' ')
+    tokenlst = infixExpr.split(' ')
     for token in tokenlst:
         if token in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' or token in '0123456789':
             outlst.append(token)
@@ -54,17 +54,17 @@ def infixtopostfix(infixexpr):
             s.append(token)
 
     while len(s) > 0:
-        opToken=s.pop()
+        opToken = s.pop()
         outlst.append(opToken)
     return outlst
 
 def main():
-    print evalpostfix(infixtopostfix('3 / 4 / 2 + 1'))
+    test()
     return 0
 
 def test():
-    assert 2.0 == evalpostfix(infixtopostfix('4 * 2 - 3 * 2'))
-    assert 1.375 == evalpostfix(infixtopostfix('3 / 4 / 2 + 1'))
+    assert 2.0 == evalPostfix(infixToPostfix('4 * 2 - 3 * 2'))
+    assert 1.375 == evalPostfix(infixToPostfix('3 / 4 / 2 + 1'))
 
 if __name__ == '__main__':
     sys.exit(main())
