@@ -13,6 +13,14 @@ OPERATOR_PRECEDENCE = {
     '(': 1,
 }
 
+TF_OPERATORS = {
+    '+': tf.add,
+    '-': tf.sub,
+    '*': tf.mul,
+    '/': tf.div,
+    '^': tf.pow,
+}
+
 class TensorflowCalculator(object):
     def evalInfix(self, infixExpr):
         return self.evalPostfix(self.infixToPostfix(infixExpr))
@@ -32,21 +40,12 @@ class TensorflowCalculator(object):
             return stack.pop().eval()
 
     def getTensorForSymbol(self, symbol, stack):
-        first = stack.pop()
-        last = stack.pop()
-        if symbol == '+':
-            tensor = tf.add(first, last)
-        elif symbol == '-':
-            tensor = tf.sub(last, first)
-        elif symbol == '*':
-            tensor = tf.mul(first, last)
-        elif symbol == '/':
-            tensor = tf.div(last, first)
-        elif symbol == '^':
-            tensor = tf.pow(last, first)
-        else:
+        tfOp = TF_OPERATORS.get(symbol)
+        if not tfOp:
             raise ValueError('Unknown symbol %s' % symbol)
-        return tensor
+        second = stack.pop()
+        first = stack.pop()
+        return tfOp(first, second)
 
     def tokenize(self, infixExpr):
         tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
