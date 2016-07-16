@@ -30,7 +30,7 @@ class TensorflowCalculator(object):
         for symbol in postfixExpr:
             try:
                 stack.append(tf.constant(float(symbol), name='Number_%s' % symbol))
-            except:
+            except ValueError:
                 result = None
                 tensor = self.getTensorForSymbol(symbol, stack)
                 stack.append(tensor)
@@ -50,7 +50,7 @@ class TensorflowCalculator(object):
     def tokenize(self, infixExpr):
         tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
         result = []
-        # Starts True to handle case where first symbol is unary negative.
+        # Starts True to handle case where first symbol is unary operator.
         prevWasToken = True
         addUnaryPrefixToNextToken = None
         for token in tokens:
@@ -73,10 +73,9 @@ class TensorflowCalculator(object):
 
     def infixToPostfix(self, infixExpr):
         # See https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+        tokens = self.tokenize(infixExpr)
         stack = []
         result = []
-
-        tokens = self.tokenize(infixExpr)
         for token in tokens:
             if re.match(r'[\d\.-]', token) and token != '-':
                 result.append(token)
