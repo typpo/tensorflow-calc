@@ -17,39 +17,35 @@ def evalInfix(infixExpr):
     return evalPostfix(infixToPostfix(infixExpr))
 
 def evalPostfix(postfixExpr):
-    s = []
+    stack = []
     for symbol in postfixExpr:
         try:
-            s.append(tf.constant(float(symbol), name='Number_%s' % symbol))
+            stack.append(tf.constant(float(symbol), name='Number_%s' % symbol))
         except:
             result = None
-            if symbol == '+':
-                first = s.pop()
-                last = s.pop()
-                tensor = tf.add(first, last)
-            elif symbol == '-':
-                first = s.pop()
-                last = s.pop()
-                tensor = tf.sub(last, first)
-            elif symbol == '*':
-                first = s.pop()
-                last = s.pop()
-                tensor = tf.mul(first, last)
-            elif symbol == '/':
-                first = s.pop()
-                last = s.pop()
-                tensor = tf.div(last, first)
-            elif symbol == '^':
-                first = s.pop()
-                last = s.pop()
-                tensor = tf.pow(last, first)
-            else:
-                raise ValueError('Unknown symbol %s' % symbol)
-            s.append(tensor)
+            tensor = getTensorForSymbol(symbol, stack)
+            stack.append(tensor)
     sess = tf.Session()
     writer = tf.train.SummaryWriter(os.path.join(os.getcwd(), 'logs'), sess.graph)
     with sess.as_default():
-        return s.pop().eval()
+        return stack.pop().eval()
+
+def getTensorForSymbol(symbol, stack):
+    first = stack.pop()
+    last = stack.pop()
+    if symbol == '+':
+        tensor = tf.add(first, last)
+    elif symbol == '-':
+        tensor = tf.sub(last, first)
+    elif symbol == '*':
+        tensor = tf.mul(first, last)
+    elif symbol == '/':
+        tensor = tf.div(last, first)
+    elif symbol == '^':
+        tensor = tf.pow(last, first)
+    else:
+        raise ValueError('Unknown symbol %s' % symbol)
+    return tensor
 
 def tokenize(infixExpr):
     tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
