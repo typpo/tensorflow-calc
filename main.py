@@ -13,90 +13,91 @@ OPERATOR_PRECEDENCE = {
     '(': 1,
 }
 
-def evalInfix(infixExpr):
-    return evalPostfix(infixToPostfix(infixExpr))
+class TensorflowCalculator(object):
+    def evalInfix(self, infixExpr):
+        return self.evalPostfix(self.infixToPostfix(infixExpr))
 
-def evalPostfix(postfixExpr):
-    stack = []
-    for symbol in postfixExpr:
-        try:
-            stack.append(tf.constant(float(symbol), name='Number_%s' % symbol))
-        except:
-            result = None
-            tensor = getTensorForSymbol(symbol, stack)
-            stack.append(tensor)
-    sess = tf.Session()
-    writer = tf.train.SummaryWriter(os.path.join(os.getcwd(), 'logs'), sess.graph)
-    with sess.as_default():
-        return stack.pop().eval()
+    def evalPostfix(self, postfixExpr):
+        stack = []
+        for symbol in postfixExpr:
+            try:
+                stack.append(tf.constant(float(symbol), name='Number_%s' % symbol))
+            except:
+                result = None
+                tensor = self.getTensorForSymbol(symbol, stack)
+                stack.append(tensor)
+        sess = tf.Session()
+        writer = tf.train.SummaryWriter(os.path.join(os.getcwd(), 'logs'), sess.graph)
+        with sess.as_default():
+            return stack.pop().eval()
 
-def getTensorForSymbol(symbol, stack):
-    first = stack.pop()
-    last = stack.pop()
-    if symbol == '+':
-        tensor = tf.add(first, last)
-    elif symbol == '-':
-        tensor = tf.sub(last, first)
-    elif symbol == '*':
-        tensor = tf.mul(first, last)
-    elif symbol == '/':
-        tensor = tf.div(last, first)
-    elif symbol == '^':
-        tensor = tf.pow(last, first)
-    else:
-        raise ValueError('Unknown symbol %s' % symbol)
-    return tensor
-
-def tokenize(infixExpr):
-    tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
-    result = []
-    # Starts True to handle case where first symbol is unary negative.
-    prevWasToken = True
-    addUnaryPrefixToNextToken = None
-    for token in tokens:
-        if token == '-':
-            # Move unary negative operator into the symbol.
-            if prevWasToken:
-                addUnaryPrefixToNextToken = token
-                continue
-
-        prevWasToken = False
-        if token in OPERATOR_PRECEDENCE.keys():
-            prevWasToken = True
-
-        if addUnaryPrefixToNextToken:
-            token = addUnaryPrefixToNextToken + token
-            addUnaryPrefixToNextToken = None
-
-        result.append(token)
-    return result
-
-def infixToPostfix(infixExpr):
-    # See https://en.wikipedia.org/wiki/Shunting-yard_algorithm
-    stack = []
-    result = []
-
-    tokens = tokenize(infixExpr)
-    for token in tokens:
-        if re.match(r'[\d\.-]', token) and token != '-':
-            result.append(token)
-        elif token == '(':
-            stack.append(token)
-        elif token == ')':
-            topToken = stack.pop()
-            while topToken != '(':
-                result.append(topToken)
-                topToken = stack.pop()
+    def getTensorForSymbol(self, symbol, stack):
+        first = stack.pop()
+        last = stack.pop()
+        if symbol == '+':
+            tensor = tf.add(first, last)
+        elif symbol == '-':
+            tensor = tf.sub(last, first)
+        elif symbol == '*':
+            tensor = tf.mul(first, last)
+        elif symbol == '/':
+            tensor = tf.div(last, first)
+        elif symbol == '^':
+            tensor = tf.pow(last, first)
         else:
-            while len(stack) > 0 and OPERATOR_PRECEDENCE[stack[-1:][0]] >= OPERATOR_PRECEDENCE[token]:
-                result.append(stack.pop())
-            stack.append(token)
+            raise ValueError('Unknown symbol %s' % symbol)
+        return tensor
 
-    while len(stack) > 0:
-        opToken = stack.pop()
-        result.append(opToken)
+    def tokenize(self, infixExpr):
+        tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
+        result = []
+        # Starts True to handle case where first symbol is unary negative.
+        prevWasToken = True
+        addUnaryPrefixToNextToken = None
+        for token in tokens:
+            if token == '-':
+                # Move unary negative operator into the symbol.
+                if prevWasToken:
+                    addUnaryPrefixToNextToken = token
+                    continue
 
-    return result
+            prevWasToken = False
+            if token in OPERATOR_PRECEDENCE.keys():
+                prevWasToken = True
+
+            if addUnaryPrefixToNextToken:
+                token = addUnaryPrefixToNextToken + token
+                addUnaryPrefixToNextToken = None
+
+            result.append(token)
+        return result
+
+    def infixToPostfix(self, infixExpr):
+        # See https://en.wikipedia.org/wiki/Shunting-yard_algorithm
+        stack = []
+        result = []
+
+        tokens = self.tokenize(infixExpr)
+        for token in tokens:
+            if re.match(r'[\d\.-]', token) and token != '-':
+                result.append(token)
+            elif token == '(':
+                stack.append(token)
+            elif token == ')':
+                topToken = stack.pop()
+                while topToken != '(':
+                    result.append(topToken)
+                    topToken = stack.pop()
+            else:
+                while len(stack) > 0 and OPERATOR_PRECEDENCE[stack[-1:][0]] >= OPERATOR_PRECEDENCE[token]:
+                    result.append(stack.pop())
+                stack.append(token)
+
+        while len(stack) > 0:
+            opToken = stack.pop()
+            result.append(opToken)
+
+        return result
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'test':
@@ -111,7 +112,8 @@ def main():
         elif expr == 'test' or expr == 't':
             test()
         else:
-            print evalInfix(expr)
+            calc = TensorflowCalculator()
+            print calc.evalInfix(expr)
     return 0
 
 def test():
@@ -129,7 +131,8 @@ def test():
     return 0
 
 def testExpr(expected, expr):
-    val = evalInfix(expr)
+    calc = TensorflowCalculator()
+    val = calc.evalInfix(expr)
     assert abs(expected - val) < 1e-4, \
         'Expected %f but got %f instead' % (expected, val)
 
