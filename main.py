@@ -4,6 +4,15 @@ import os
 
 import tensorflow as tf
 
+OPERATOR_PRECEDENCE = {
+    '^': 4,
+    '/': 3,
+    '*': 3,
+    '+': 2,
+    '-': 2,
+    '(': 1,
+}
+
 def evalInfix(infixExpr):
     return evalPostfix(infixToPostfix(infixExpr))
 
@@ -11,55 +20,70 @@ def evalPostfix(postfixExpr):
     s = []
     for symbol in postfixExpr:
         try:
-            s.append(tf.constant(float(symbol), name=symbol))
+            s.append(tf.constant(float(symbol), name='Number_%s' % symbol))
         except:
-            if len(s) > 0:
-                result = None
-                if symbol == '+':
-                    first = s.pop()
-                    last = s.pop()
-                    tensor = tf.add(first, last)
-                elif symbol == '-':
-                    first = s.pop()
-                    last = s.pop()
-                    tensor = tf.sub(last, first)
-                elif symbol == '*':
-                    first = s.pop()
-                    last = s.pop()
-                    tensor = tf.mul(first, last)
-                elif symbol == '/':
-                    first = s.pop()
-                    last = s.pop()
-                    tensor = tf.div(last, first)
-                elif symbol == '^':
-                    first = s.pop()
-                    last = s.pop()
-                    tensor = tf.pow(last, first)
-                else:
-                    raise ValueError('Unknown symbol %s' % symbol)
-                s.append(tensor)
+            result = None
+            if symbol == '+':
+                first = s.pop()
+                last = s.pop()
+                tensor = tf.add(first, last)
+            elif symbol == '-':
+                first = s.pop()
+                last = s.pop()
+                tensor = tf.sub(last, first)
+            elif symbol == '*':
+                first = s.pop()
+                last = s.pop()
+                tensor = tf.mul(first, last)
+            elif symbol == '/':
+                first = s.pop()
+                last = s.pop()
+                tensor = tf.div(last, first)
+            elif symbol == '^':
+                first = s.pop()
+                last = s.pop()
+                tensor = tf.pow(last, first)
+            else:
+                raise ValueError('Unknown symbol %s' % symbol)
+            s.append(tensor)
     sess = tf.Session()
     writer = tf.train.SummaryWriter(os.path.join(os.getcwd(), 'logs'), sess.graph)
     with sess.as_default():
         return s.pop().eval()
 
+def tokenize(infixExpr):
+    tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
+    result = []
+    # Starts True to handle case where first symbol is unary negative.
+    prevWasToken = True
+    addUnaryPrefixToNextToken = None
+    for token in tokens:
+        if token == '-':
+            # Move unary negative operator into the symbol.
+            if prevWasToken:
+                addUnaryPrefixToNextToken = token
+                continue
+
+        prevWasToken = False
+        if token in OPERATOR_PRECEDENCE.keys():
+            prevWasToken = True
+
+        if addUnaryPrefixToNextToken:
+            token = addUnaryPrefixToNextToken + token
+            addUnaryPrefixToNextToken = None
+
+        result.append(token)
+    return result
+
+
 def infixToPostfix(infixExpr):
     # See https://en.wikipedia.org/wiki/Shunting-yard_algorithm
     s = []
     result = []
-    prec = {
-        '^': 4,
-        '/': 3,
-        '*': 3,
-        '+': 2,
-        '-': 2,
-        '(': 1,
-    }
 
-    tokens = re.findall('[\^+-/*//()]|[-+]?\d*\.\d+|\d+', infixExpr)
-    print tokens
+    tokens = tokenize(infixExpr)
     for token in tokens:
-        if token[0] in '0123456789':
+        if re.match(r'[\d\.-]', token) and token != '-':
             result.append(token)
         elif token == '(':
             s.append(token)
@@ -69,16 +93,19 @@ def infixToPostfix(infixExpr):
                 result.append(topToken)
                 topToken = s.pop()
         else:
-            while len(s) > 0 and prec[s[-1:][0]] >= prec[token]:
+            while len(s) > 0 and OPERATOR_PRECEDENCE[s[-1:][0]] >= OPERATOR_PRECEDENCE[token]:
                 result.append(s.pop())
             s.append(token)
 
     while len(s) > 0:
         opToken = s.pop()
         result.append(opToken)
+
     return result
 
 def main():
+    test()
+    return 0
     while True:
         print '\nEnter an expression to calculate (q to exit):'
         print '> ',
@@ -100,6 +127,7 @@ def test():
     testExpr(126, '5 ^ 3 + 1')
     testExpr(6.3, '5.3+1')
     testExpr(6.3, '(5.3)+1')
+    testExpr(1, '-1 + 2')
     testExpr(4.3, '(5.3)+-1')
     print 'All tests passed.'
 
