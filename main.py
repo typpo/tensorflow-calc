@@ -71,10 +71,9 @@ def tokenize(infixExpr):
         result.append(token)
     return result
 
-
 def infixToPostfix(infixExpr):
     # See https://en.wikipedia.org/wiki/Shunting-yard_algorithm
-    s = []
+    stack = []
     result = []
 
     tokens = tokenize(infixExpr)
@@ -82,33 +81,34 @@ def infixToPostfix(infixExpr):
         if re.match(r'[\d\.-]', token) and token != '-':
             result.append(token)
         elif token == '(':
-            s.append(token)
+            stack.append(token)
         elif token == ')':
-            topToken = s.pop()
+            topToken = stack.pop()
             while topToken != '(':
                 result.append(topToken)
-                topToken = s.pop()
+                topToken = stack.pop()
         else:
-            while len(s) > 0 and OPERATOR_PRECEDENCE[s[-1:][0]] >= OPERATOR_PRECEDENCE[token]:
-                result.append(s.pop())
-            s.append(token)
+            while len(stack) > 0 and OPERATOR_PRECEDENCE[stack[-1:][0]] >= OPERATOR_PRECEDENCE[token]:
+                result.append(stack.pop())
+            stack.append(token)
 
-    while len(s) > 0:
-        opToken = s.pop()
+    while len(stack) > 0:
+        opToken = stack.pop()
         result.append(opToken)
 
     return result
 
 def main():
-    test()
-    return 0
+    if len(sys.argv) > 1 and sys.argv[1] == 'test':
+        return test()
+
     while True:
-        print '\nEnter an expression to calculate (q to exit):'
+        print '\nEnter an expression to calculate (t to test, q to exit):'
         print '> ',
         expr = raw_input().strip()
         if expr == 'q':
             break
-        elif expr == 'test':
+        elif expr == 'test' or expr == 't':
             test()
         else:
             print evalInfix(expr)
@@ -126,6 +126,7 @@ def test():
     testExpr(1, '-1 + 2')
     testExpr(4.3, '(5.3)+-1')
     print 'All tests passed.'
+    return 0
 
 def testExpr(expected, expr):
     val = evalInfix(expr)
