@@ -125,6 +125,7 @@ def test():
     testExpr(6.3, '(5.3)+1')
     testExpr(1, '-1 + 2')
     testExpr(4.3, '(5.3)+-1')
+    testExpr(107, '5 + 10 * 9 + (5 + -1) * 9 / 3 ')
     print 'All tests passed.'
     return 0
 
