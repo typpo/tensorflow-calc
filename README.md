@@ -11,3 +11,9 @@ Step 3: After you've evaluated some expressions, run tensorboard on the logs to 
 `tensorboard --logdir logs/`
 
 Then go to http://localhost:6006/#graphs to view.
+
+![](http://i.imgur.com/6aPY95J.png)
+
+![](http://i.imgur.com/nZNpm5O.png)
+
+wow
