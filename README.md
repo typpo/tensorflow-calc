@@ -1,5 +1,7 @@
 # tensorflow-calc
 
+A normal calculator...implemented in Tensorflow for no good reason.
+
 Step 0: Set up a virtual environment
 
 ```
